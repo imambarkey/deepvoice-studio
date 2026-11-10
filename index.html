@@ -8,36 +8,30 @@
 
 <style>
 *{box-sizing:border-box}
-
 body{
  margin:0;
  background:#101827;
  color:#eef2ff;
  font-family:Arial,sans-serif;
 }
-
 .container{
  max-width:650px;
  margin:auto;
  padding:18px;
 }
-
 header{
  text-align:center;
  padding:15px 0 22px;
 }
-
 header h1{
  margin:0;
  color:#62e6c5;
  font-size:28px;
 }
-
 header p{
  color:#aab7cc;
  font-size:13px;
 }
-
 .card{
  background:#1c293b;
  border:1px solid #304158;
@@ -45,20 +39,17 @@ header p{
  padding:17px;
  margin-bottom:15px;
 }
-
 h3{
  margin:0 0 14px;
  color:#62e6c5;
  font-size:16px;
 }
-
 .status{
  text-align:center;
  color:#aab7cc;
  font-size:13px;
  margin-bottom:12px;
 }
-
 .timer{
  text-align:center;
  font-size:32px;
@@ -66,7 +57,6 @@ h3{
  margin:12px 0;
  font-variant-numeric:tabular-nums;
 }
-
 canvas{
  width:100%;
  height:125px;
@@ -74,14 +64,12 @@ canvas{
  border-radius:10px;
  display:block;
 }
-
 .buttons{
  display:grid;
  grid-template-columns:repeat(2,1fr);
  gap:10px;
  margin-top:13px;
 }
-
 button{
  border:0;
  border-radius:9px;
@@ -92,44 +80,31 @@ button{
  color:white;
  background:#34465e;
 }
-
 button:disabled{
  opacity:.35;
  cursor:not-allowed;
 }
-
 .primary{background:#08a985}
 .danger{background:#dc4558}
 .blue{background:#3478d4}
 .purple{background:#7856cb}
 .orange{background:#c47b28}
-
-button:active{
- transform:scale(.98);
-}
-
 .full{
  width:100%;
  margin-top:10px;
 }
-
 .playbox{
  background:#111d2d;
  padding:12px;
  border-radius:10px;
  margin-top:10px;
 }
-
-.playbox strong{
- font-size:14px;
-}
-
+.playbox strong{font-size:14px}
 audio{
  width:100%;
  margin-top:10px;
  height:38px;
 }
-
 .row{
  display:flex;
  justify-content:space-between;
@@ -138,54 +113,44 @@ audio{
  margin:15px 0;
  font-size:14px;
 }
-
 input[type=range]{
  width:48%;
  accent-color:#62e6c5;
 }
-
 input[type=checkbox]{
  accent-color:#08a985;
  width:18px;
  height:18px;
 }
-
 .note{
  color:#aabbd0;
  font-size:12px;
  line-height:1.7;
  margin-top:12px;
 }
-
 footer{
  text-align:center;
  color:#70839d;
  font-size:11px;
  padding:15px;
 }
-
 .value{
- min-width:38px;
+ min-width:42px;
  text-align:right;
  color:#62e6c5;
 }
-
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <header>
 <h1>🎙 DeepVoice Studio</h1>
-<p>Professional Voice Recording & Enhancement</p>
+<p>Voice Recording & Enhancement Studio</p>
 </header>
 
-<!-- RECORDING -->
-
 <div class="card">
-
 <h3>🎤 Voice Recorder</h3>
 
 <div class="status" id="status">
@@ -197,35 +162,16 @@ footer{
 <canvas id="waveform"></canvas>
 
 <div class="buttons">
-
-<button class="primary" id="startBtn">
-● Start Recording
-</button>
-
-<button class="orange" id="pauseBtn" disabled>
-Ⅱ Pause
-</button>
-
-<button class="danger" id="stopBtn" disabled>
-■ Stop
-</button>
-
-<button id="deleteBtn" disabled>
-✕ Delete
-</button>
-
+<button class="primary" id="startBtn">● Start Recording</button>
+<button class="orange" id="pauseBtn" disabled>Ⅱ Pause</button>
+<button class="danger" id="stopBtn" disabled>■ Stop</button>
+<button id="deleteBtn" disabled>✕ Delete</button>
 </div>
 
-<p class="note">
-রেকর্ডিং চলাকালীন অডিও গ্রাফ দেখা যাবে।
-</p>
-
+<p class="note">রেকর্ডিং চলাকালীন অডিও গ্রাফ দেখা যাবে।</p>
 </div>
-
-<!-- ENHANCEMENT -->
 
 <div class="card">
-
 <h3>⚙ Voice Enhancement</h3>
 
 <div class="row">
@@ -235,29 +181,25 @@ footer{
 
 <div class="row">
 <label>Noise Gate</label>
-<input type="range" id="gateLevel"
-min="0" max="30" value="12">
-<span class="value" id="gateValue">12</span>
+<input type="range" id="gateLevel" min="0" max="30" value="8">
+<span class="value" id="gateValue">8</span>
 </div>
 
 <div class="row">
 <label>Voice Bass</label>
-<input type="range" id="bass"
-min="-5" max="8" value="2">
+<input type="range" id="bass" min="-5" max="8" value="2">
 <span class="value" id="bassValue">2</span>
 </div>
 
 <div class="row">
 <label>Voice Clarity</label>
-<input type="range" id="clarity"
-min="0" max="8" value="3">
+<input type="range" id="clarity" min="0" max="8" value="3">
 <span class="value" id="clarityValue">3</span>
 </div>
 
 <div class="row">
 <label>Voice Volume</label>
-<input type="range" id="volume"
-min="50" max="150" value="110">
+<input type="range" id="volume" min="50" max="150" value="110">
 <span class="value" id="volumeValue">110%</span>
 </div>
 
@@ -266,17 +208,12 @@ min="50" max="150" value="110">
 </button>
 
 <p class="note">
-প্রসেসিংয়ের সময় Original Audio অপরিবর্তিত থাকবে।
-Noise Reduction-এর জন্য High-pass Filter,
-50Hz/100Hz Hum Filter এবং Noise Gate ব্যবহার করা হবে।
+রেকর্ডিংয়ের সময় ফিল্টার প্রয়োগ হবে। রেকর্ডিং শেষ হওয়ার পরও
+Noise Reduction ও Voice Enhancement প্রয়োগ করতে পারবেন।
 </p>
-
 </div>
 
-<!-- PLAYBACK -->
-
 <div class="card">
-
 <h3>🎧 Audio Playback</h3>
 
 <div class="playbox">
@@ -290,51 +227,29 @@ Noise Reduction-এর জন্য High-pass Filter,
 </div>
 
 <div class="buttons">
-
-<button class="blue" id="beforeBtn" disabled>
-◀ Before
-</button>
-
-<button class="purple" id="afterBtn" disabled>
-After ▶
-</button>
-
+<button class="blue" id="beforeBtn" disabled>◀ Before</button>
+<button class="purple" id="afterBtn" disabled>After ▶</button>
 </div>
 
 <div class="note" id="compareStatus">
 Before / After তুলনা করতে রেকর্ডিং করুন।
 </div>
-
 </div>
 
-<!-- EXPORT -->
-
 <div class="card">
-
 <h3>💾 Export Audio</h3>
 
 <div class="buttons">
-
-<button class="primary" id="wavBtn" disabled>
-Download WAV
-</button>
-
-<button class="blue" id="mp3Btn" disabled>
-Download MP3
-</button>
-
+<button class="primary" id="wavBtn" disabled>Download WAV</button>
+<button class="blue" id="mp3Btn" disabled>Download MP3</button>
 </div>
 
 <p class="note">
 Processed Audio তৈরি হওয়ার পর Export করতে পারবেন।
 </p>
-
 </div>
 
-<footer>
-DeepVoice Studio | Voice Recording & Enhancement
-</footer>
-
+<footer>DeepVoice Studio | Voice Recording & Enhancement</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
@@ -342,31 +257,30 @@ DeepVoice Studio | Voice Recording & Enhancement
 <script>
 "use strict";
 
-/* ==================================
-   GLOBAL VARIABLES
-================================== */
-
 const $ = id => document.getElementById(id);
 
 let audioContext = null;
 let microphone = null;
 let source = null;
 let analyser = null;
+let inputAnalyser = null;
 
 let filters = {};
-
 let mediaDestination = null;
-let liveGain = null;
-let gateNode = null;
+let gateGain = null;
+let volumeGain = null;
 
 let originalRecorder = null;
+let processedRecorder = null;
 
 let originalChunks = [];
+let processedChunks = [];
+
 let originalBlob = null;
+let processedBlob = null;
 
 let originalURL = null;
 let processedURL = null;
-let processedBlob = null;
 
 let originalBuffer = null;
 let processedBuffer = null;
@@ -376,34 +290,79 @@ let paused = false;
 
 let startTime = 0;
 let elapsed = 0;
+
 let timerInterval = null;
 let animationFrame = null;
+let gateAnimation = null;
 
 const canvas = $("waveform");
 const ctx = canvas.getContext("2d");
 
 
-/* ==================================
-   CANVAS
-================================== */
-
 function resizeCanvas(){
-
  const dpr = window.devicePixelRatio || 1;
-
  canvas.width = canvas.clientWidth * dpr;
  canvas.height = canvas.clientHeight * dpr;
-
  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
 window.addEventListener("resize",resizeCanvas);
 resizeCanvas();
 
+function setStatus(message){
+ $("status").textContent = message;
+}
 
-/* ==================================
-   AUDIO INITIALIZATION
-================================== */
+function formatTime(seconds){
+ const m = Math.floor(seconds/60);
+ const s = Math.floor(seconds%60);
+ return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function updateTimer(){
+ const seconds = elapsed +
+ (paused ? 0 : (Date.now()-startTime)/1000);
+ $("timer").textContent = formatTime(seconds);
+}
+
+function clearAudioURLs(){
+ if(originalURL) URL.revokeObjectURL(originalURL);
+ if(processedURL) URL.revokeObjectURL(processedURL);
+
+ originalURL = null;
+ processedURL = null;
+
+ $("originalPlayer").removeAttribute("src");
+ $("processedPlayer").removeAttribute("src");
+}
+
+function setButtons(){
+ const hasOriginal = !!originalBuffer;
+ const hasProcessed = !!processedBuffer;
+
+ $("deleteBtn").disabled = !hasOriginal;
+ $("applyBtn").disabled = !hasOriginal;
+ $("beforeBtn").disabled = !hasOriginal;
+ $("afterBtn").disabled = !hasProcessed;
+ $("wavBtn").disabled = !hasProcessed;
+ $("mp3Btn").disabled = !hasProcessed;
+}
+
+function getSupportedMimeType(){
+ const types = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4"
+ ];
+
+ for(const type of types){
+  if(MediaRecorder.isTypeSupported(type)){
+   return type;
+  }
+ }
+
+ return "";
+}
 
 async function initializeAudio(){
 
@@ -427,6 +386,9 @@ async function initializeAudio(){
 
  source = audioContext.createMediaStreamSource(microphone);
 
+ inputAnalyser = audioContext.createAnalyser();
+ inputAnalyser.fftSize = 2048;
+
  analyser = audioContext.createAnalyser();
  analyser.fftSize = 2048;
 
@@ -447,16 +409,643 @@ async function initializeAudio(){
  const bass = audioContext.createBiquadFilter();
  bass.type = "lowshelf";
  bass.frequency.value = 160;
+ bass.gain.value = 2;
 
  const clarity = audioContext.createBiquadFilter();
  clarity.type = "peaking";
  clarity.frequency.value = 2800;
  clarity.Q.value = 0.8;
-
-javascript
-window.voiceFilters = {
- bass: bassFilter,
- clarity: clarityFilter
-};
+ clarity.gain.value = 3;
 
  const compressor = audioContext.createDynamicsCompressor();
+ compressor.threshold.value = -20;
+ compressor.knee.value = 20;
+ compressor.ratio.value = 3;
+ compressor.attack.value = 0.01;
+ compressor.release.value = 0.2;
+
+ gateGain = audioContext.createGain();
+ gateGain.gain.value = 1;
+
+ volumeGain = audioContext.createGain();
+ volumeGain.gain.value = 1.1;
+
+ mediaDestination = audioContext.createMediaStreamDestination();
+
+ filters = {
+  highpass,
+  notch50,
+  notch100,
+  bass,
+  clarity,
+  compressor
+ };
+
+ source.connect(inputAnalyser);
+
+ source.connect(highpass);
+
+ highpass.connect(notch50);
+ notch50.connect(notch100);
+ notch100.connect(bass);
+ bass.connect(clarity);
+ clarity.connect(compressor);
+ compressor.connect(gateGain);
+ gateGain.connect(volumeGain);
+
+ volumeGain.connect(analyser);
+ analyser.connect(mediaDestination);
+
+ updateFilters();
+}
+
+function updateFilters(){
+
+ if(!audioContext || !filters.bass) return;
+
+ const enabled = $("noiseEnabled").checked;
+
+ filters.highpass.frequency.value = enabled ? 85 : 20;
+ filters.notch50.Q.value = enabled ? 12 : 0.1;
+ filters.notch100.Q.value = enabled ? 12 : 0.1;
+
+ filters.bass.gain.value = Number($("bass").value);
+ filters.clarity.gain.value = Number($("clarity").value);
+
+ volumeGain.gain.value =
+ Number($("volume").value)/100;
+
+ $("gateValue").textContent = $("gateLevel").value;
+ $("bassValue").textContent = $("bass").value;
+ $("clarityValue").textContent = $("clarity").value;
+ $("volumeValue").textContent = $("volume").value+"%";
+}
+
+function drawWaveform(){
+
+ if(!analyser) return;
+
+ const width = canvas.clientWidth;
+ const height = canvas.clientHeight;
+
+ const data = new Uint8Array(analyser.fftSize);
+ analyser.getByteTimeDomainData(data);
+
+ ctx.clearRect(0,0,width,height);
+
+ ctx.lineWidth = 2;
+ ctx.strokeStyle = "#62e6c5";
+ ctx.beginPath();
+
+ const slice = width/data.length;
+
+ for(let i=0;i<data.length;i++){
+  const x = i*slice;
+  const y = (data[i]/255)*height;
+
+  if(i===0) ctx.moveTo(x,y);
+  else ctx.lineTo(x,y);
+ }
+
+ ctx.stroke();
+
+ animationFrame = requestAnimationFrame(drawWaveform);
+}
+
+function monitorNoiseGate(){
+
+ if(!inputAnalyser || !gateGain || !recording || paused){
+  return;
+ }
+
+ const data = new Float32Array(inputAnalyser.fftSize);
+ inputAnalyser.getFloatTimeDomainData(data);
+
+ let sum = 0;
+
+ for(let i=0;i<data.length;i++){
+  sum += data[i]*data[i];
+ }
+
+ const rms = Math.sqrt(sum/data.length);
+ const db = 20*Math.log10(rms+0.000001);
+
+ const threshold = -60 + Number($("gateLevel").value);
+
+ const target = $("noiseEnabled").checked
+  ? (db < threshold ? 0.12 : 1)
+  : 1;
+
+ gateGain.gain.setTargetAtTime(
+  target,
+  audioContext.currentTime,
+  0.04
+ );
+
+ gateAnimation = requestAnimationFrame(monitorNoiseGate);
+}
+
+async function startRecording(){
+
+ try{
+
+  if(recording) return;
+
+  $("startBtn").disabled = true;
+  setStatus("মাইক্রোফোন চালু হচ্ছে...");
+
+  await initializeAudio();
+
+  const mimeType = getSupportedMimeType();
+  const options = mimeType ? {mimeType} : {};
+
+  originalChunks = [];
+  processedChunks = [];
+
+  originalRecorder = new MediaRecorder(microphone,options);
+  processedRecorder = new MediaRecorder(mediaDestination.stream,options);
+
+  originalRecorder.ondataavailable = event => {
+   if(event.data.size>0) originalChunks.push(event.data);
+  };
+
+  processedRecorder.ondataavailable = event => {
+   if(event.data.size>0) processedChunks.push(event.data);
+  };
+
+  originalRecorder.start(250);
+  processedRecorder.start(250);
+
+  recording = true;
+  paused = false;
+
+  startTime = Date.now();
+  elapsed = 0;
+
+  $("startBtn").disabled = true;
+  $("pauseBtn").disabled = false;
+  $("stopBtn").disabled = false;
+
+  setStatus("🔴 রেকর্ডিং চলছে...");
+  drawWaveform();
+  monitorNoiseGate();
+
+  timerInterval = setInterval(updateTimer,250);
+
+ }catch(error){
+
+  console.error(error);
+  setStatus("মাইক্রোফোন চালু হয়নি: "+error.message);
+
+  $("startBtn").disabled = false;
+ }
+}
+
+function pauseRecording(){
+
+ if(!recording || !originalRecorder) return;
+
+ if(!paused){
+
+  elapsed += (Date.now()-startTime)/1000;
+
+  originalRecorder.pause();
+  processedRecorder.pause();
+
+  paused = true;
+
+  $("pauseBtn").textContent = "▶ Resume";
+  setStatus("রেকর্ডিং সাময়িক বন্ধ");
+
+ }else{
+
+  originalRecorder.resume();
+  processedRecorder.resume();
+
+  paused = false;
+  startTime = Date.now();
+
+  $("pauseBtn").textContent = "Ⅱ Pause";
+  setStatus("🔴 রেকর্ডিং চলছে...");
+  monitorNoiseGate();
+ }
+}
+
+async function stopRecording(){
+
+ if(!recording) return;
+
+ recording = false;
+ paused = false;
+
+ clearInterval(timerInterval);
+
+ if(animationFrame) cancelAnimationFrame(animationFrame);
+ if(gateAnimation) cancelAnimationFrame(gateAnimation);
+
+ if(originalRecorder && originalRecorder.state!=="inactive"){
+  originalRecorder.stop();
+ }
+
+ if(processedRecorder && processedRecorder.state!=="inactive"){
+  processedRecorder.stop();
+ }
+
+ $("startBtn").disabled = false;
+ $("pauseBtn").disabled = true;
+ $("stopBtn").disabled = true;
+
+ $("pauseBtn").textContent = "Ⅱ Pause";
+
+ setStatus("অডিও প্রস্তুত হচ্ছে...");
+
+ await new Promise(resolve=>setTimeout(resolve,500));
+
+ originalBlob = new Blob(originalChunks,{
+  type:originalChunks[0]?.type || "audio/webm"
+ });
+
+ processedBlob = new Blob(processedChunks,{
+  type:processedChunks[0]?.type || "audio/webm"
+ });
+
+ try{
+
+  const originalArray = await originalBlob.arrayBuffer();
+
+  originalBuffer = await audioContext.decodeAudioData(
+   originalArray.slice(0)
+  );
+
+  const processedArray = await processedBlob.arrayBuffer();
+
+  processedBuffer = await audioContext.decodeAudioData(
+   processedArray.slice(0)
+  );
+
+  clearAudioURLs();
+
+  originalURL = URL.createObjectURL(originalBlob);
+  processedURL = URL.createObjectURL(processedBlob);
+
+  $("originalPlayer").src = originalURL;
+  $("processedPlayer").src = processedURL;
+
+  setStatus("রেকর্ডিং সম্পন্ন হয়েছে।");
+  $("compareStatus").textContent =
+   "Original ও Processed Audio তৈরি হয়েছে।";
+
+  setButtons();
+
+ }catch(error){
+
+  console.error(error);
+  setStatus("অডিও প্রস্তুত করা যায়নি: "+error.message);
+
+ }
+
+ if(microphone){
+  microphone.getTracks().forEach(track=>track.stop());
+ }
+
+ if(audioContext && audioContext.state!=="closed"){
+  await audioContext.close();
+ }
+
+ audioContext = null;
+ microphone = null;
+ source = null;
+ analyser = null;
+ inputAnalyser = null;
+ filters = {};
+ gateGain = null;
+ volumeGain = null;
+}
+async function applyNoiseRemoval(){
+
+ if(!originalBuffer){
+  alert("প্রথমে রেকর্ডিং করুন।");
+  return;
+ }
+
+ $("applyBtn").disabled = true;
+ $("applyBtn").textContent = "Processing...";
+
+ try{
+
+  const sampleRate = originalBuffer.sampleRate;
+  const length = originalBuffer.length;
+
+  const offline = new OfflineAudioContext(
+   originalBuffer.numberOfChannels,
+   length,
+   sampleRate
+  );
+
+  const sourceNode = offline.createBufferSource();
+  sourceNode.buffer = originalBuffer;
+
+  let lastNode = sourceNode;
+
+  if($("noiseEnabled").checked){
+
+   const highpass = offline.createBiquadFilter();
+   highpass.type = "highpass";
+   highpass.frequency.value = 85;
+
+   const notch50 = offline.createBiquadFilter();
+   notch50.type = "notch";
+   notch50.frequency.value = 50;
+   notch50.Q.value = 12;
+
+   const notch100 = offline.createBiquadFilter();
+   notch100.type = "notch";
+   notch100.frequency.value = 100;
+   notch100.Q.value = 12;
+
+   lastNode.connect(highpass);
+   highpass.connect(notch50);
+   notch50.connect(notch100);
+
+   lastNode = notch100;
+  }
+
+  const bass = offline.createBiquadFilter();
+  bass.type = "lowshelf";
+  bass.frequency.value = 160;
+  bass.gain.value = Number($("bass").value);
+
+  const clarity = offline.createBiquadFilter();
+  clarity.type = "peaking";
+  clarity.frequency.value = 2800;
+  clarity.Q.value = 0.8;
+  clarity.gain.value = Number($("clarity").value);
+
+  const compressor = offline.createDynamicsCompressor();
+  compressor.threshold.value = -20;
+  compressor.ratio.value = 3;
+
+  const volume = offline.createGain();
+  volume.gain.value = Number($("volume").value)/100;
+
+  lastNode.connect(bass);
+  bass.connect(clarity);
+  clarity.connect(compressor);
+  compressor.connect(volume);
+  volume.connect(offline.destination);
+
+  sourceNode.start(0);
+
+  processedBuffer = await offline.startRendering();
+
+  processedBlob = audioBufferToWav(processedBuffer);
+
+  if(processedURL) URL.revokeObjectURL(processedURL);
+
+  processedURL = URL.createObjectURL(processedBlob);
+  $("processedPlayer").src = processedURL;
+
+  $("compareStatus").textContent =
+   "নতুন Processed Audio তৈরি হয়েছে।";
+
+  setButtons();
+
+ }catch(error){
+
+  console.error(error);
+  alert("Processing Error: "+error.message);
+
+ }finally{
+
+  $("applyBtn").disabled = false;
+  $("applyBtn").textContent = "✨ Apply Noise Removal";
+
+ }
+}
+
+function audioBufferToWav(buffer){
+
+ const channels = buffer.numberOfChannels;
+ const sampleRate = buffer.sampleRate;
+ const length = buffer.length;
+
+ const bytesPerSample = 2;
+ const dataSize = length*channels*bytesPerSample;
+
+ const arrayBuffer = new ArrayBuffer(44+dataSize);
+ const view = new DataView(arrayBuffer);
+
+ function writeString(offset,string){
+  for(let i=0;i<string.length;i++){
+   view.setUint8(offset+i,string.charCodeAt(i));
+  }
+ }
+
+ writeString(0,"RIFF");
+ view.setUint32(4,36+dataSize,true);
+ writeString(8,"WAVE");
+ writeString(12,"fmt ");
+ view.setUint32(16,16,true);
+ view.setUint16(20,1,true);
+ view.setUint16(22,channels,true);
+ view.setUint32(24,sampleRate,true);
+ view.setUint32(28,sampleRate*channels*2,true);
+ view.setUint16(32,channels*2,true);
+ view.setUint16(34,16,true);
+ writeString(36,"data");
+ view.setUint32(40,dataSize,true);
+
+ let offset = 44;
+
+ for(let i=0;i<length;i++){
+
+  for(let channel=0;channel<channels;channel++){
+
+   let sample = buffer.getChannelData(channel)[i];
+
+   sample = Math.max(-1,Math.min(1,sample));
+
+   view.setInt16(
+    offset,
+    sample<0 ? sample*32768 : sample*32767,
+    true
+   );
+
+   offset+=2;
+  }
+ }
+
+ return new Blob([arrayBuffer],{type:"audio/wav"});
+}
+
+function downloadBlob(blob,filename){
+
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement("a");
+
+ link.href = url;
+ link.download = filename;
+
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+
+ setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+function downloadWav(){
+
+ if(!processedBuffer) return;
+
+ const wav = audioBufferToWav(processedBuffer);
+ downloadBlob(wav,"DeepVoice-Processed.wav");
+}
+
+function downloadMp3(){
+
+ if(!processedBuffer) return;
+
+ if(typeof lamejs==="undefined"){
+  alert("MP3 Encoder লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");
+  return;
+ }
+
+ try{
+
+  const channels = processedBuffer.numberOfChannels;
+  const sampleRate = processedBuffer.sampleRate;
+
+  const encoder = new lamejs.Mp3Encoder(
+   channels,
+   sampleRate,
+   128
+  );
+
+  const left = processedBuffer.getChannelData(0);
+  let right = channels>1
+   ? processedBuffer.getChannelData(1)
+   : null;
+
+  const samples = 1152;
+  const mp3Data = [];
+
+  for(let i=0;i<left.length;i+=samples){
+
+   const leftPart = left.slice(i,i+samples);
+   const leftInt = new Int16Array(leftPart.length);
+
+   for(let j=0;j<leftPart.length;j++){
+    const sample = Math.max(-1,Math.min(1,leftPart[j]));
+    leftInt[j] = sample<0 ? sample*32768 : sample*32767;
+   }
+
+   let encoded;
+
+   if(right){
+
+    const rightPart = right.slice(i,i+samples);
+    const rightInt = new Int16Array(rightPart.length);
+
+    for(let j=0;j<rightPart.length;j++){
+     const sample = Math.max(-1,Math.min(1,rightPart[j]));
+     rightInt[j] = sample<0 ? sample*32768 : sample*32767;
+    }
+
+    encoded = encoder.encodeBuffer(leftInt,rightInt);
+
+   }else{
+
+    encoded = encoder.encodeBuffer(leftInt);
+   }
+
+   if(encoded.length>0){
+    mp3Data.push(encoded);
+   }
+  }
+
+  const finalData = encoder.flush();
+
+  if(finalData.length>0){
+   mp3Data.push(finalData);
+  }
+
+  const mp3Blob = new Blob(mp3Data,{type:"audio/mp3"});
+
+  downloadBlob(mp3Blob,"DeepVoice-Processed.mp3");
+
+ }catch(error){
+
+  console.error(error);
+  alert("MP3 তৈরি করা যায়নি: "+error.message);
+
+ }
+}
+
+function playBefore(){
+
+ if(!originalURL) return;
+
+ $("compareStatus").textContent = "Original Audio চলছে।";
+ $("originalPlayer").play();
+}
+
+function playAfter(){
+
+ if(!processedURL) return;
+
+ $("compareStatus").textContent = "Processed Audio চলছে।";
+ $("processedPlayer").play();
+}
+
+function deleteRecording(){
+
+ if(recording){
+  alert("রেকর্ডিং বন্ধ করার পর Delete করুন।");
+  return;
+ }
+
+ clearAudioURLs();
+
+ originalBuffer = null;
+ processedBuffer = null;
+ originalBlob = null;
+ processedBlob = null;
+
+ originalChunks = [];
+ processedChunks = [];
+
+ $("timer").textContent = "00:00";
+ $("compareStatus").textContent = "রেকর্ডিং মুছে ফেলা হয়েছে।";
+
+ setStatus("নতুন রেকর্ডিং শুরু করতে প্রস্তুত।");
+ setButtons();
+}
+
+$("startBtn").addEventListener("click",startRecording);
+$("pauseBtn").addEventListener("click",pauseRecording);
+$("stopBtn").addEventListener("click",stopRecording);
+
+$("deleteBtn").addEventListener("click",deleteRecording);
+$("applyBtn").addEventListener("click",applyNoiseRemoval);
+
+$("beforeBtn").addEventListener("click",playBefore);
+$("afterBtn").addEventListener("click",playAfter);
+
+$("wavBtn").addEventListener("click",downloadWav);
+$("mp3Btn").addEventListener("click",downloadMp3);
+
+[
+ "noiseEnabled",
+ "gateLevel",
+ "bass",
+ "clarity",
+ "volume"
+].forEach(id=>{
+ $(id).addEventListener("input",updateFilters);
+ $(id).addEventListener("change",updateFilters);
+});
+
+setButtons();
+</script>
+</body>
+</html>
