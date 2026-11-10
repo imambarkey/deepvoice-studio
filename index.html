@@ -5,209 +5,458 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#101827">
 <title>DeepVoice Studio</title>
-<link rel="manifest" href="./manifest.webmanifest">
 
 <style>
 *{box-sizing:border-box}
+
 body{
  margin:0;
  background:#101827;
- color:#fff;
+ color:#eef2ff;
  font-family:Arial,sans-serif;
- padding:16px;
 }
-.container{max-width:650px;margin:auto}
-h1{text-align:center;color:#54d6ff}
-.subtitle{text-align:center;color:#aab8ca}
-.card{
- background:#1b293c;
+
+.container{
+ max-width:650px;
+ margin:auto;
  padding:18px;
+}
+
+header{
+ text-align:center;
+ padding:15px 0 22px;
+}
+
+header h1{
+ margin:0;
+ color:#62e6c5;
+ font-size:28px;
+}
+
+header p{
+ color:#aab7cc;
+ font-size:13px;
+}
+
+.card{
+ background:#1c293b;
+ border:1px solid #304158;
  border-radius:15px;
- margin:15px 0;
+ padding:17px;
+ margin-bottom:15px;
 }
-button{
- border:0;
- border-radius:9px;
- padding:13px;
- margin:5px 2px;
- font-size:14px;
+
+h3{
+ margin:0 0 14px;
+ color:#62e6c5;
+ font-size:16px;
+}
+
+.status{
+ text-align:center;
+ color:#aab7cc;
+ font-size:13px;
+ margin-bottom:12px;
+}
+
+.timer{
+ text-align:center;
+ font-size:32px;
  font-weight:bold;
- cursor:pointer;
- background:#263c56;
- color:white;
+ margin:12px 0;
+ font-variant-numeric:tabular-nums;
 }
-.primary{background:#087fce}
-.green{background:#159b68}
-.red{background:#d44353}
-.orange{background:#c77a19}
-button:disabled{opacity:.4;cursor:not-allowed}
-.full{width:100%}
+
 canvas{
  width:100%;
- height:110px;
- background:#101827;
+ height:125px;
+ background:#0b1421;
  border-radius:10px;
  display:block;
 }
-audio{width:100%;margin-top:10px}
-label{display:block;margin:15px 0 7px}
-input[type=range]{width:100%}
-.status{
- text-align:center;
- color:#65dcff;
- padding:10px;
+
+.buttons{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:10px;
+ margin-top:13px;
 }
-.small{font-size:12px;color:#aab8ca}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.grid button{width:100%;margin:0}
-h3{margin-top:0}
+
+button{
+ border:0;
+ border-radius:9px;
+ padding:13px 8px;
+ font-size:14px;
+ font-weight:bold;
+ cursor:pointer;
+ color:white;
+ background:#34465e;
+}
+
+button:disabled{
+ opacity:.35;
+ cursor:not-allowed;
+}
+
+.primary{background:#08a985}
+.danger{background:#dc4558}
+.blue{background:#3478d4}
+.purple{background:#7856cb}
+.orange{background:#c47b28}
+
+button:active{
+ transform:scale(.98);
+}
+
+.full{
+ width:100%;
+ margin-top:10px;
+}
+
+.playbox{
+ background:#111d2d;
+ padding:12px;
+ border-radius:10px;
+ margin-top:10px;
+}
+
+.playbox strong{
+ font-size:14px;
+}
+
+audio{
+ width:100%;
+ margin-top:10px;
+ height:38px;
+}
+
+.row{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px;
+ margin:15px 0;
+ font-size:14px;
+}
+
+input[type=range]{
+ width:48%;
+ accent-color:#62e6c5;
+}
+
+input[type=checkbox]{
+ accent-color:#08a985;
+ width:18px;
+ height:18px;
+}
+
+.note{
+ color:#aabbd0;
+ font-size:12px;
+ line-height:1.7;
+ margin-top:12px;
+}
+
+footer{
+ text-align:center;
+ color:#70839d;
+ font-size:11px;
+ padding:15px;
+}
+
+.value{
+ min-width:38px;
+ text-align:right;
+ color:#62e6c5;
+}
+
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
+<header>
 <h1>🎙 DeepVoice Studio</h1>
-<p class="subtitle">Advanced Voice Recording & Editing</p>
+<p>Professional Voice Recording & Enhancement</p>
+</header>
+
+<!-- RECORDING -->
 
 <div class="card">
-<h3>Audio Recording</h3>
+
+<h3>🎤 Voice Recorder</h3>
+
+<div class="status" id="status">
+মাইক্রোফোন চালু করতে Start Recording চাপুন
+</div>
+
+<div class="timer" id="timer">00:00</div>
 
 <canvas id="waveform"></canvas>
 
-<div class="status" id="recordStatus">
-Ready to record
-</div>
+<div class="buttons">
 
-<div class="grid">
-<button class="red" id="recordBtn">● Record</button>
-<button class="orange" id="stopBtn" disabled>■ Stop</button>
-</div>
-
-<p class="small">রেকর্ডিংয়ের সময় লাইভ অডিও ওয়েভফর্ম দেখা যাবে।</p>
-</div>
-
-<div class="card">
-<h3>Original Audio</h3>
-
-<input type="file" id="audioFile" accept="audio/*">
-
-<audio id="originalPlayer" controls></audio>
-
-<button class="full" id="originalBtn">▶ Play Original Audio</button>
-</div>
-
-<div class="card">
-<h3>Voice Enhancement</h3>
-
-<label>Noise Reduction</label>
-<input type="range" id="noise" min="0" max="100" value="35">
-<p class="small" id="noiseValue">35%</p>
-
-<label>Voice Bass</label>
-<input type="range" id="bass" min="-15" max="15" value="3">
-<p class="small" id="bassValue">3 dB</p>
-
-<label>Voice Treble</label>
-<input type="range" id="treble" min="-15" max="15" value="2">
-<p class="small" id="trebleValue">2 dB</p>
-
-<label>Voice Volume</label>
-<input type="range" id="volume" min="50" max="200" value="110">
-<p class="small" id="volumeValue">110%</p>
-
-<button class="primary full" id="processBtn">
-⚙ Process Audio
+<button class="primary" id="startBtn">
+● Start Recording
 </button>
 
-<div class="status" id="processStatus">Waiting for audio</div>
+<button class="orange" id="pauseBtn" disabled>
+Ⅱ Pause
+</button>
+
+<button class="danger" id="stopBtn" disabled>
+■ Stop
+</button>
+
+<button id="deleteBtn" disabled>
+✕ Delete
+</button>
+
 </div>
 
-<div class="card">
-<h3>Processed Audio</h3>
-
-<audio id="processedPlayer" controls></audio>
-
-<div class="grid">
-<button class="green" id="afterBtn">▶ After</button>
-<button class="primary" id="beforeBtn">▶ Before</button>
-</div>
-
-<button class="full" id="compareBtn">⇄ Compare Before / After</button>
-</div>
-
-<div class="card">
-<h3>Export Audio</h3>
-
-<div class="grid">
-<button class="green" id="wavBtn">Download WAV</button>
-<button class="primary" id="mp3Btn">Download MP3</button>
-</div>
-
-<p class="small">
-WAV Export সরাসরি কাজ করবে। MP3 Export-এর জন্য MP3 encoder প্রয়োজন।
+<p class="note">
+রেকর্ডিং চলাকালীন অডিও গ্রাফ দেখা যাবে।
 </p>
+
+</div>
+
+<!-- ENHANCEMENT -->
+
+<div class="card">
+
+<h3>⚙ Voice Enhancement</h3>
+
+<div class="row">
+<label>Noise Reduction</label>
+<input type="checkbox" id="noiseEnabled" checked>
+</div>
+
+<div class="row">
+<label>Noise Gate</label>
+<input type="range" id="gateLevel"
+min="0" max="30" value="12">
+<span class="value" id="gateValue">12</span>
+</div>
+
+<div class="row">
+<label>Voice Bass</label>
+<input type="range" id="bass"
+min="-5" max="8" value="2">
+<span class="value" id="bassValue">2</span>
+</div>
+
+<div class="row">
+<label>Voice Clarity</label>
+<input type="range" id="clarity"
+min="0" max="8" value="3">
+<span class="value" id="clarityValue">3</span>
+</div>
+
+<div class="row">
+<label>Voice Volume</label>
+<input type="range" id="volume"
+min="50" max="150" value="110">
+<span class="value" id="volumeValue">110%</span>
+</div>
+
+<button class="blue full" id="applyBtn" disabled>
+✨ Apply Noise Removal
+</button>
+
+<p class="note">
+প্রসেসিংয়ের সময় Original Audio অপরিবর্তিত থাকবে।
+Noise Reduction-এর জন্য High-pass Filter,
+50Hz/100Hz Hum Filter এবং Noise Gate ব্যবহার করা হবে।
+</p>
+
+</div>
+
+<!-- PLAYBACK -->
+
+<div class="card">
+
+<h3>🎧 Audio Playback</h3>
+
+<div class="playbox">
+<strong>Original Audio</strong>
+<audio id="originalPlayer" controls></audio>
+</div>
+
+<div class="playbox">
+<strong>Processed Audio</strong>
+<audio id="processedPlayer" controls></audio>
+</div>
+
+<div class="buttons">
+
+<button class="blue" id="beforeBtn" disabled>
+◀ Before
+</button>
+
+<button class="purple" id="afterBtn" disabled>
+After ▶
+</button>
+
+</div>
+
+<div class="note" id="compareStatus">
+Before / After তুলনা করতে রেকর্ডিং করুন।
 </div>
 
 </div>
+
+<!-- EXPORT -->
+
+<div class="card">
+
+<h3>💾 Export Audio</h3>
+
+<div class="buttons">
+
+<button class="primary" id="wavBtn" disabled>
+Download WAV
+</button>
+
+<button class="blue" id="mp3Btn" disabled>
+Download MP3
+</button>
+
+</div>
+
+<p class="note">
+Processed Audio তৈরি হওয়ার পর Export করতে পারবেন।
+</p>
+
+</div>
+
+<footer>
+DeepVoice Studio | Voice Recording & Enhancement
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
 
 <script>
-let originalBuffer=null;
-let processedBuffer=null;
-let originalURL=null;
-let processedURL=null;
-let recorder=null;
-let chunks=[];
-let audioContext=null;
-let analyser=null;
-let animationId=null;
-let currentStream=null;
+"use strict";
 
-const $=id=>document.getElementById(id);
+/* ==================================
+   GLOBAL VARIABLES
+================================== */
 
-const canvas=$("waveform");
-const ctx=canvas.getContext("2d");
+const $ = id => document.getElementById(id);
+
+let audioContext = null;
+let microphone = null;
+let source = null;
+let analyser = null;
+
+let filters = {};
+
+let mediaDestination = null;
+let liveGain = null;
+let gateNode = null;
+
+let originalRecorder = null;
+
+let originalChunks = [];
+let originalBlob = null;
+
+let originalURL = null;
+let processedURL = null;
+let processedBlob = null;
+
+let originalBuffer = null;
+let processedBuffer = null;
+
+let recording = false;
+let paused = false;
+
+let startTime = 0;
+let elapsed = 0;
+let timerInterval = null;
+let animationFrame = null;
+
+const canvas = $("waveform");
+const ctx = canvas.getContext("2d");
+
+
+/* ==================================
+   CANVAS
+================================== */
 
 function resizeCanvas(){
- canvas.width=canvas.clientWidth*devicePixelRatio;
- canvas.height=canvas.clientHeight*devicePixelRatio;
+
+ const dpr = window.devicePixelRatio || 1;
+
+ canvas.width = canvas.clientWidth * dpr;
+ canvas.height = canvas.clientHeight * dpr;
+
+ ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-resizeCanvas();
+
 window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
 
-function drawWave(){
- if(!analyser)return;
 
- const data=new Uint8Array(analyser.frequencyBinCount);
- analyser.getByteTimeDomainData(data);
+/* ==================================
+   AUDIO INITIALIZATION
+================================== */
 
- ctx.clearRect(0,0,canvas.width,canvas.height);
- ctx.beginPath();
- ctx.strokeStyle="#54d6ff";
- ctx.lineWidth=2*devicePixelRatio;
+async function initializeAudio(){
 
- const step=canvas.width/data.length;
+ audioContext = new (
+  window.AudioContext ||
+  window.webkitAudioContext
+ )();
 
- for(let i=0;i<data.length;i++){
-  const x=i*step;
-  const y=(data[i]/255)*canvas.height;
-  if(i===0)ctx.moveTo(x,y);
-  else ctx.lineTo(x,y);
- }
-
- ctx.stroke();
- animationId=requestAnimationFrame(drawWave);
-}
-
-async function setupAudio(){
- audioContext=new (window.AudioContext||window.webkitAudioContext)();
-
- if(audioContext.state==="suspended"){
+ if(audioContext.state === "suspended"){
   await audioContext.resume();
  }
 
- analyser=audioContext.createAnalyser();
- analyser.fftSize=2048;
-}
+ microphone = await navigator.mediaDevices.getUserMedia({
+  audio:{
+   echoCancellation:false,
+   noiseSuppression:false,
+   autoGainControl:false,
+   channelCount:1
+  }
+ });
 
-$("record
+ source = audioContext.createMediaStreamSource(microphone);
+
+ analyser = audioContext.createAnalyser();
+ analyser.fftSize = 2048;
+
+ const highpass = audioContext.createBiquadFilter();
+ highpass.type = "highpass";
+ highpass.frequency.value = 85;
+
+ const notch50 = audioContext.createBiquadFilter();
+ notch50.type = "notch";
+ notch50.frequency.value = 50;
+ notch50.Q.value = 12;
+
+ const notch100 = audioContext.createBiquadFilter();
+ notch100.type = "notch";
+ notch100.frequency.value = 100;
+ notch100.Q.value = 12;
+
+ const bass = audioContext.createBiquadFilter();
+ bass.type = "lowshelf";
+ bass.frequency.value = 160;
+
+ const clarity = audioContext.createBiquadFilter();
+ clarity.type = "peaking";
+ clarity.frequency.value = 2800;
+ clarity.Q.value = 0.8;
+
+javascript
+window.voiceFilters = {
+ bass: bassFilter,
+ clarity: clarityFilter
+};
+
+ const compressor = audioContext.createDynamicsCompressor();
