@@ -1698,6 +1698,21 @@ function deleteRecording() {
 
 /* ---------- CONNECT BUTTONS ---------- */
 
+$("startBtn").addEventListener(
+    "click",
+    startRecording
+);
+
+$("pauseBtn").addEventListener(
+    "click",
+    pauseRecording
+);
+
+$("stopBtn").addEventListener(
+    "click",
+    stopRecording
+);
+
 $("applyBtn").addEventListener(
     "click",
     applyEffects
