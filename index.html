@@ -606,4 +606,464 @@ console.log("DeepVoice Studio Part 2 Loaded");
 })();
 </script>
 
+<script>
+/* =====================================
+   DEEPVOICE STUDIO - PART 3A
+   RECORDING ENGINE
+===================================== */
+
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let stream = null;
+let audioContext = null;
+let mediaSource = null;
+let mediaDestination = null;
+
+let rawRecorder = null;
+let processedRecorder = null;
+
+let rawChunks = [];
+let processedChunks = [];
+
+let originalBlob = null;
+let processedBlob = null;
+
+let originalURL = null;
+let processedURL = null;
+
+let seconds = 0;
+let timerInterval = null;
+let gateAnimation = null;
+let isRecording = false;
+
+let gateAnalyser = null;
+let gateGain = null;
+let highPass = null;
+let lowPass = null;
+
+let recordingMime = "audio/webm";
+
+
+/* ---------- STATUS ---------- */
+
+function status(message) {
+    $("status").textContent = message;
+}
+
+function processingStatus(message) {
+    $("processingStatus").textContent = message;
+}
+
+function formatTime(time) {
+    const m = Math.floor(time / 60);
+    const s = time % 60;
+
+    return String(m).padStart(2, "0") +
+        ":" + String(s).padStart(2, "0");
+}
+
+function updateTimer() {
+    $("timer").textContent = formatTime(seconds);
+}
+
+
+/* ---------- AUDIO FORMAT ---------- */
+
+function getMimeType() {
+
+    const types = [
+        "audio/webm;codecs=opus",
+        "audio/ogg;codecs=opus",
+        "audio/webm",
+        "audio/ogg"
+    ];
+
+    return types.find(type =>
+        MediaRecorder.isTypeSupported(type)
+    ) || "";
+}
+
+
+/* ---------- PLAYBACK BUTTON STATES ---------- */
+
+function enablePlayback() {
+
+    $("applyBtn").disabled = false;
+    $("beforeBtn").disabled = false;
+    $("wavBtn").disabled = false;
+
+    $("compareStatus").textContent =
+        "Original Audio প্রস্তুত। Process করার জন্য Apply All Effects চাপুন।";
+}
+
+
+/* ---------- START RECORDING ---------- */
+
+async function startRecording() {
+
+    try {
+
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+
+            throw new Error(
+                "Microphone requires HTTPS."
+            );
+        }
+
+        if (!window.MediaRecorder) {
+            throw new Error(
+                "MediaRecorder সমর্থিত নয়।"
+            );
+        }
+
+        status("মাইক্রোফোন চালু হচ্ছে...");
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            }
+        });
+
+        audioContext = window.dvAudioContext ||
+            new (window.AudioContext ||
+            window.webkitAudioContext)();
+
+        window.dvAudioContext = audioContext;
+
+        await audioContext.resume();
+
+        /* MINI VISUALIZER */
+
+        await window.DV_VIS.attachStream(stream);
+
+        /* MICROPHONE SOURCE */
+
+        mediaSource =
+            audioContext.createMediaStreamSource(stream);
+
+        /* EQUALIZER */
+
+        const eqOutput = window.DV_EQ.connect(mediaSource);
+
+        /* NOISE FILTER */
+
+        highPass = audioContext.createBiquadFilter();
+        highPass.type = "highpass";
+        highPass.frequency.value = 80;
+        highPass.Q.value = 0.7;
+
+        lowPass = audioContext.createBiquadFilter();
+        lowPass.type = "lowpass";
+        lowPass.frequency.value = 15000;
+
+        /* COMPRESSOR */
+
+        const compressor =
+            audioContext.createDynamicsCompressor();
+
+        compressor.threshold.value = -20;
+        compressor.knee.value = 20;
+        compressor.ratio.value = 3;
+        compressor.attack.value = 0.01;
+        compressor.release.value = 0.2;
+
+        /* NOISE GATE */
+
+        gateAnalyser = audioContext.createAnalyser();
+        gateAnalyser.fftSize = 512;
+
+        gateGain = audioContext.createGain();
+        gateGain.gain.value = 1;
+
+        const volumeGain = audioContext.createGain();
+
+        volumeGain.gain.value = 1;
+
+        /* AUDIO CONNECTION */
+
+        eqOutput.connect(highPass);
+        highPass.connect(lowPass);
+        lowPass.connect(gateAnalyser);
+        gateAnalyser.connect(gateGain);
+        gateGain.connect(compressor);
+        compressor.connect(volumeGain);
+
+        mediaDestination =
+            audioContext.createMediaStreamDestination();
+
+        volumeGain.connect(mediaDestination);
+
+        /* RECORDERS */
+
+        recordingMime = getMimeType();
+
+        const options = recordingMime
+            ? { mimeType: recordingMime }
+            : {};
+
+        rawChunks = [];
+        processedChunks = [];
+
+        rawRecorder = new MediaRecorder(stream, options);
+
+        processedRecorder = new MediaRecorder(
+            mediaDestination.stream,
+            options
+        );
+
+        /* ORIGINAL AUDIO DATA */
+
+        rawRecorder.ondataavailable = e => {
+
+            if (e.data.size > 0) {
+                rawChunks.push(e.data);
+            }
+        };
+
+        /* PROCESSED AUDIO DATA */
+
+        processedRecorder.ondataavailable = e => {
+
+            if (e.data.size > 0) {
+                processedChunks.push(e.data);
+            }
+        };
+
+        /* ORIGINAL AUDIO READY */
+
+        rawRecorder.onstop = () => {
+
+            originalBlob = new Blob(rawChunks, {
+                type: recordingMime || "audio/webm"
+            });
+
+            if (originalURL) {
+                URL.revokeObjectURL(originalURL);
+            }
+
+            originalURL = URL.createObjectURL(originalBlob);
+
+            $("originalPlayer").src = originalURL;
+
+            enablePlayback();
+        };
+
+        /* LIVE PROCESSED AUDIO READY */
+
+        processedRecorder.onstop = () => {
+
+            processedBlob = new Blob(processedChunks, {
+                type: recordingMime || "audio/webm"
+            });
+
+            if (processedURL) {
+                URL.revokeObjectURL(processedURL);
+            }
+
+            processedURL = URL.createObjectURL(processedBlob);
+
+            $("processedPlayer").src = processedURL;
+        };
+
+        rawRecorder.start(250);
+        processedRecorder.start(250);
+
+        seconds = 0;
+        updateTimer();
+
+        isRecording = true;
+
+        $("startBtn").disabled = true;
+        $("pauseBtn").disabled = false;
+        $("stopBtn").disabled = false;
+        $("deleteBtn").disabled = false;
+
+        status("🔴 Recording চলছে...");
+
+        timerInterval = setInterval(() => {
+
+            seconds++;
+            updateTimer();
+
+        }, 1000);
+
+        startNoiseGate();
+
+    } catch (error) {
+
+        console.error(error);
+
+        status("ত্রুটি: " + error.message);
+
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+        }
+    }
+}
+
+
+/* ---------- NOISE GATE ---------- */
+
+function startNoiseGate() {
+
+    const data = new Float32Array(
+        gateAnalyser.fftSize
+    );
+
+    function monitor() {
+
+        if (!isRecording) return;
+
+        gateAnalyser.getFloatTimeDomainData(data);
+
+        let sum = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            sum += data[i] * data[i];
+        }
+
+        const rms = Math.sqrt(sum / data.length);
+
+        const enabled = $("noiseEnabled").checked;
+
+        const threshold =
+            Number($("gateLevel").value) / 1000;
+
+        let target = 1;
+
+        if (enabled && rms < threshold) {
+            target = 0.04;
+        }
+
+        gateGain.gain.setTargetAtTime(
+            target,
+            audioContext.currentTime,
+            0.025
+        );
+
+        const strength =
+            Number($("noiseStrength").value);
+
+        if (enabled) {
+
+            highPass.frequency.setTargetAtTime(
+                80 + strength * 0.9,
+                audioContext.currentTime,
+                0.05
+            );
+
+            lowPass.frequency.setTargetAtTime(
+                15000 - strength * 35,
+                audioContext.currentTime,
+                0.05
+            );
+
+        } else {
+
+            highPass.frequency.value = 80;
+            lowPass.frequency.value = 15000;
+        }
+
+        gateAnimation = requestAnimationFrame(monitor);
+    }
+
+    monitor();
+}
+
+
+/* ---------- PAUSE / RESUME ---------- */
+
+function pauseRecording() {
+
+    if (!rawRecorder) return;
+
+    if (rawRecorder.state === "recording") {
+
+        rawRecorder.pause();
+        processedRecorder.pause();
+
+        isRecording = false;
+
+        clearInterval(timerInterval);
+
+        cancelAnimationFrame(gateAnimation);
+
+        $("pauseBtn").textContent = "▶ Resume";
+
+        status("Recording Paused");
+
+        window.DV_VIS.stop();
+
+    } else if (rawRecorder.state === "paused") {
+
+        rawRecorder.resume();
+        processedRecorder.resume();
+
+        isRecording = true;
+
+        $("pauseBtn").textContent = "Ⅱ Pause";
+
+        status("🔴 Recording চলছে...");
+
+        timerInterval = setInterval(() => {
+
+            seconds++;
+            updateTimer();
+
+        }, 1000);
+
+        window.DV_VIS.attachStream(stream);
+
+        startNoiseGate();
+    }
+}
+
+
+/* ---------- STOP RECORDING ---------- */
+
+function stopRecording() {
+
+    if (!rawRecorder) return;
+
+    clearInterval(timerInterval);
+
+    cancelAnimationFrame(gateAnimation);
+
+    isRecording = false;
+
+    if (rawRecorder.state !== "inactive") {
+        rawRecorder.stop();
+    }
+
+    if (processedRecorder &&
+        processedRecorder.state !== "inactive") {
+
+        processedRecorder.stop();
+    }
+
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+
+    window.DV_VIS.stop();
+
+    $("startBtn").disabled = false;
+    $("pauseBtn").disabled = true;
+    $("stopBtn").disabled = true;
+
+    $("pauseBtn").textContent = "Ⅱ Pause";
+
+    status("Recording সম্পন্ন হয়েছে");
+
+    $("compareStatus").textContent =
+        "Original ও Processed Audio প্রস্তুত হচ্ছে...";
+}
+
+
 
