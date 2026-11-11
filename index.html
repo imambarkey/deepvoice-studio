@@ -1067,3 +1067,691 @@ function stopRecording() {
 
 
 
+/* =====================================
+   DEEPVOICE STUDIO - PART 3B
+   PROCESSING + PLAYBACK + EXPORT
+===================================== */
+
+
+/* ---------- OFFLINE AUDIO PROCESSING ---------- */
+
+async function applyEffects() {
+
+    if (!originalBlob) {
+        processingStatus("প্রথমে Recording করুন");
+        return;
+    }
+
+    try {
+
+        $("applyBtn").disabled = true;
+        processingStatus("Audio Processing হচ্ছে...");
+
+        const arrayBuffer = await originalBlob.arrayBuffer();
+
+        const decodeContext = new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+        const audioBuffer =
+            await decodeContext.decodeAudioData(arrayBuffer);
+
+        const tempo = Number($("tempo").value) / 100;
+
+        const sampleRate = audioBuffer.sampleRate;
+
+        const duration = audioBuffer.duration / tempo;
+
+        const offline = new OfflineAudioContext(
+            audioBuffer.numberOfChannels,
+            Math.ceil(duration * sampleRate),
+            sampleRate
+        );
+
+        const source = offline.createBufferSource();
+
+        source.buffer = audioBuffer;
+        source.playbackRate.value = tempo;
+
+        source.detune.value =
+            Number($("pitch").value) * 100 -
+            Number($("deepener").value) * 2;
+
+        /* EQUALIZER */
+
+        const eqSettings = window.DV_EQ.getSettings();
+
+        const low = offline.createBiquadFilter();
+
+        low.type = "lowshelf";
+        low.frequency.value = 250;
+
+        low.gain.value =
+            eqSettings.low +
+            Number($("bass").value);
+
+        const mid = offline.createBiquadFilter();
+
+        mid.type = "peaking";
+        mid.frequency.value = 1200;
+        mid.Q.value = 0.8;
+        mid.gain.value = eqSettings.mid;
+
+        const high = offline.createBiquadFilter();
+
+        high.type = "highshelf";
+        high.frequency.value = 4000;
+
+        high.gain.value =
+            eqSettings.high +
+            Number($("clarity").value);
+
+        /* NOISE FILTER */
+
+        const filter = offline.createBiquadFilter();
+
+        filter.type = "highpass";
+
+        filter.frequency.value =
+            $("noiseEnabled").checked
+            ? 80 + Number($("noiseStrength").value) * 0.9
+            : 30;
+
+        /* COMPRESSOR */
+
+        const compressor =
+            offline.createDynamicsCompressor();
+
+        compressor.threshold.value = -20;
+        compressor.knee.value = 20;
+        compressor.ratio.value = 3;
+        compressor.attack.value = 0.01;
+        compressor.release.value = 0.2;
+
+        /* VOLUME */
+
+        const volume = offline.createGain();
+
+        volume.gain.value =
+            Number($("volume").value) / 100;
+
+        /* MAIN CONNECTION */
+
+        source.connect(low);
+        low.connect(mid);
+        mid.connect(high);
+        high.connect(filter);
+        filter.connect(compressor);
+        compressor.connect(volume);
+
+        /* MAIN AUDIO OUTPUT */
+
+        volume.connect(offline.destination);
+
+        /* ECHO EFFECT */
+
+        if ($("echoEnabled").checked) {
+
+            const delay = offline.createDelay(2);
+
+            delay.delayTime.value =
+                Number($("echoDelay").value) / 1000;
+
+            const feedback = offline.createGain();
+
+            feedback.gain.value =
+                Number($("echoFeedback").value) / 100;
+
+            const echoGain = offline.createGain();
+
+            echoGain.gain.value =
+                Number($("echo").value) / 100;
+
+            volume.connect(delay);
+
+            delay.connect(feedback);
+            feedback.connect(delay);
+
+            delay.connect(echoGain);
+            echoGain.connect(offline.destination);
+        }
+
+        /* REVERB EFFECT */
+
+        if ($("reverbEnabled").checked) {
+
+            const room = $("roomType").value;
+
+            const reverbLength =
+                room === "church" ? 4 :
+                room === "hall" ? 2.5 : 1.2;
+
+            const length =
+                Math.floor(sampleRate * reverbLength);
+
+            const impulse = offline.createBuffer(
+                2,
+                length,
+                sampleRate
+            );
+
+            for (let ch = 0; ch < 2; ch++) {
+
+                const channel = impulse.getChannelData(ch);
+
+                for (let i = 0; i < length; i++) {
+
+                    channel[i] =
+                        (Math.random() * 2 - 1) *
+                        Math.pow(1 - i / length, 3);
+                }
+            }
+
+            const convolver =
+                offline.createConvolver();
+
+            convolver.buffer = impulse;
+
+            const wet = offline.createGain();
+
+            wet.gain.value =
+                Number($("reverb").value) / 100;
+
+            volume.connect(convolver);
+
+            convolver.connect(wet);
+            wet.connect(offline.destination);
+        }
+
+        /* RENDER AUDIO */
+
+        source.start(0);
+
+        const rendered = await offline.startRendering();
+
+        processedBlob = audioBufferToWav(rendered);
+
+        if (processedURL) {
+            URL.revokeObjectURL(processedURL);
+        }
+
+        processedURL = URL.createObjectURL(processedBlob);
+
+        $("processedPlayer").src = processedURL;
+
+        $("processedPlayer").load();
+
+        $("afterBtn").disabled = false;
+        $("mp3Btn").disabled = false;
+
+        processingStatus("✓ Processing সম্পন্ন হয়েছে");
+
+        $("compareStatus").textContent =
+            "Processed Audio প্রস্তুত। এখন শুনতে পারবেন।";
+
+        await decodeContext.close();
+
+    } catch (error) {
+
+        console.error(error);
+
+        processingStatus(
+            "Processing Error: " + error.message
+        );
+
+    } finally {
+
+        $("applyBtn").disabled = false;
+    }
+}
+
+
+/* ---------- WAV CONVERTER ---------- */
+
+function audioBufferToWav(buffer) {
+
+    const channels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const frames = buffer.length;
+
+    const interleaved = new Float32Array(
+        frames * channels
+    );
+
+    for (let i = 0; i < frames; i++) {
+
+        for (let ch = 0; ch < channels; ch++) {
+
+            interleaved[i * channels + ch] =
+                buffer.getChannelData(ch)[i];
+        }
+    }
+
+    const dataSize = interleaved.length * 2;
+
+    const array = new ArrayBuffer(44 + dataSize);
+
+    const view = new DataView(array);
+
+    function writeString(offset, text) {
+
+        for (let i = 0; i < text.length; i++) {
+
+            view.setUint8(
+                offset + i,
+                text.charCodeAt(i)
+            );
+        }
+    }
+
+    writeString(0, "RIFF");
+
+    view.setUint32(4, 36 + dataSize, true);
+
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+
+    view.setUint32(24, sampleRate, true);
+
+    view.setUint32(
+        28,
+        sampleRate * channels * 2,
+        true
+    );
+
+    view.setUint16(32, channels * 2, true);
+    view.setUint16(34, 16, true);
+
+    writeString(36, "data");
+
+    view.setUint32(40, dataSize, true);
+
+    let offset = 44;
+
+    for (let i = 0; i < interleaved.length; i++) {
+
+        let sample = Math.max(
+            -1,
+            Math.min(1, interleaved[i])
+        );
+
+        sample = sample < 0
+            ? sample * 32768
+            : sample * 32767;
+
+        view.setInt16(offset, sample, true);
+
+        offset += 2;
+    }
+
+    return new Blob([array], {
+        type: "audio/wav"
+    });
+}
+
+
+/* ---------- DOWNLOAD FUNCTION ---------- */
+
+function downloadBlob(blob, filename) {
+
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1500);
+}
+
+
+/* ---------- WAV EXPORT ---------- */
+
+$("wavBtn").onclick = () => {
+
+    if (processedBlob) {
+
+        downloadBlob(
+            processedBlob,
+            "DeepVoice_Processed.wav"
+        );
+
+    } else if (originalBlob) {
+
+        downloadBlob(
+            originalBlob,
+            "DeepVoice_Original.wav"
+        );
+    }
+};
+
+
+/* ---------- MP3 EXPORT ---------- */
+
+async function exportMP3() {
+
+    if (!processedBlob) return;
+
+    try {
+
+        $("mp3Btn").disabled = true;
+
+        processingStatus("MP3 তৈরি হচ্ছে...");
+
+        if (!window.lamejs) {
+
+            await new Promise((resolve, reject) => {
+
+                const script = document.createElement("script");
+
+                script.src =
+                    "https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js";
+
+                script.onload = resolve;
+
+                script.onerror = () => {
+                    reject(
+                        new Error("MP3 Encoder লোড হয়নি")
+                    );
+                };
+
+                document.head.appendChild(script);
+            });
+        }
+
+        const context = new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+        const buffer = await context.decodeAudioData(
+            await processedBlob.arrayBuffer()
+        );
+
+        const encoder = new lamejs.Mp3Encoder(
+            buffer.numberOfChannels,
+            buffer.sampleRate,
+            128
+        );
+
+        const left = buffer.getChannelData(0);
+
+        const right = buffer.numberOfChannels > 1
+            ? buffer.getChannelData(1)
+            : left;
+
+        function toInt16(data) {
+
+            const result = new Int16Array(data.length);
+
+            for (let i = 0; i < data.length; i++) {
+
+                const sample = Math.max(
+                    -1,
+                    Math.min(1, data[i])
+                );
+
+                result[i] = sample < 0
+                    ? sample * 32768
+                    : sample * 32767;
+            }
+
+            return result;
+        }
+
+        const left16 = toInt16(left);
+        const right16 = toInt16(right);
+
+        const mp3Parts = [];
+
+        const blockSize = 1152;
+
+        for (let i = 0; i < left16.length; i += blockSize) {
+
+            const l = left16.subarray(
+                i,
+                i + blockSize
+            );
+
+            const r = right16.subarray(
+                i,
+                i + blockSize
+            );
+
+            const encoded =
+                buffer.numberOfChannels > 1
+                ? encoder.encodeBuffer(l, r)
+                : encoder.encodeBuffer(l);
+
+            if (encoded.length) {
+                mp3Parts.push(new Uint8Array(encoded));
+            }
+        }
+
+        const end = encoder.flush();
+
+        if (end.length) {
+            mp3Parts.push(new Uint8Array(end));
+        }
+
+        const mp3Blob = new Blob(mp3Parts, {
+            type: "audio/mpeg"
+        });
+
+        downloadBlob(
+            mp3Blob,
+            "DeepVoice_Processed.mp3"
+        );
+
+        processingStatus("✓ MP3 Export সম্পন্ন");
+
+        await context.close();
+
+    } catch (error) {
+
+        console.error(error);
+
+        processingStatus(error.message);
+
+    } finally {
+
+        $("mp3Btn").disabled = false;
+    }
+}
+
+$("mp3Btn").onclick = exportMP3;
+
+
+/* ---------- BEFORE / AFTER ---------- */
+
+$("beforeBtn").onclick = () => {
+
+    if (!originalURL) return;
+
+    $("processedPlayer").pause();
+
+    $("originalPlayer").currentTime = 0;
+
+    $("originalPlayer").play();
+
+    $("compareStatus").textContent =
+        "▶ Original Audio চলছে";
+};
+
+
+$("afterBtn").onclick = () => {
+
+    if (!processedURL) {
+
+        $("compareStatus").textContent =
+            "প্রথমে Audio Process করুন";
+
+        return;
+    }
+
+    $("originalPlayer").pause();
+
+    $("processedPlayer").currentTime = 0;
+
+    $("processedPlayer").play();
+
+    $("compareStatus").textContent =
+        "▶ Processed Audio চলছে";
+};
+
+
+/* ---------- DELETE RECORDING ---------- */
+
+function deleteRecording() {
+
+    if (isRecording ||
+        (rawRecorder && rawRecorder.state !== "inactive")) {
+
+        alert("প্রথমে Recording Stop করুন।");
+
+        return;
+    }
+
+    if (originalURL) {
+        URL.revokeObjectURL(originalURL);
+    }
+
+    if (processedURL) {
+        URL.revokeObjectURL(processedURL);
+    }
+
+    originalURL = null;
+    processedURL = null;
+
+    originalBlob = null;
+    processedBlob = null;
+
+    rawChunks = [];
+    processedChunks = [];
+
+    $("originalPlayer").pause();
+    $("processedPlayer").pause();
+
+    $("originalPlayer").removeAttribute("src");
+    $("processedPlayer").removeAttribute("src");
+
+    $("originalPlayer").load();
+    $("processedPlayer").load();
+
+    $("timer").textContent = "00:00";
+
+    seconds = 0;
+
+    $("applyBtn").disabled = true;
+    $("beforeBtn").disabled = true;
+    $("afterBtn").disabled = true;
+    $("wavBtn").disabled = true;
+    $("mp3Btn").disabled = true;
+
+    $("deleteBtn").disabled = true;
+    $("startBtn").disabled = false;
+    $("pauseBtn").disabled = true;
+    $("stopBtn").disabled = true;
+
+    $("pauseBtn").textContent = "Ⅱ Pause";
+
+    $("compareStatus").textContent =
+        "নতুন Recording শুরু করুন।";
+
+    processingStatus("");
+
+    status(
+        "মাইক্রোফোন চালু করতে Start Recording চাপুন"
+    );
+
+    rawRecorder = null;
+    processedRecorder = null;
+
+    if (audioContext &&
+        audioContext.state !== "closed") {
+
+        audioContext.close();
+    }
+
+    audioContext = null;
+
+    window.dvAudioContext = null;
+
+    window.DV_VIS.stop();
+}
+
+
+/* ---------- CONNECT BUTTONS ---------- */
+
+$("applyBtn").addEventListener(
+    "click",
+    applyEffects
+);
+
+$("deleteBtn").addEventListener(
+    "click",
+    deleteRecording
+);
+
+
+/* ---------- SLIDER VALUE DISPLAY ---------- */
+
+const sliderUnits = {
+
+    gateLevel: "",
+    noiseStrength: "%",
+    deepener: "%",
+    bass: " dB",
+    clarity: " dB",
+    volume: "%",
+    pitch: "",
+    tempo: "%",
+    reverb: "%",
+    echo: "%",
+    echoDelay: " ms",
+    echoFeedback: "%"
+};
+
+Object.keys(sliderUnits).forEach(id => {
+
+    const input = $(id);
+    const output = $(id + "Value");
+
+    if (!input || !output) return;
+
+    input.addEventListener("input", () => {
+
+        output.textContent =
+            input.value + sliderUnits[id];
+    });
+});
+
+
+/* ---------- FINAL INITIALIZATION ---------- */
+
+$("applyBtn").disabled = true;
+$("beforeBtn").disabled = true;
+$("afterBtn").disabled = true;
+$("wavBtn").disabled = true;
+$("mp3Btn").disabled = true;
+
+console.log("DeepVoice Studio Part 3 Completed");
+
+})();
+</script>
+
