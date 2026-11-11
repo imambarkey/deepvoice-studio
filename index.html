@@ -277,3 +277,333 @@ Before / After তুলনা করতে রেকর্ডিং করু�
 </div>
 
 
+<script>
+/* =====================================
+   DEEPVOICE STUDIO - PART 2
+   MINI VISUALIZER + 3 BAND EQUALIZER
+===================================== */
+
+(function () {
+"use strict";
+
+/* ---------- MINI VISUALIZER ---------- */
+
+const canvas = document.getElementById("waveform");
+const ctx = canvas.getContext("2d");
+
+canvas.style.height = "48px";
+canvas.style.background = "#0b1421";
+
+let analyser = null;
+let visualizerData = null;
+let visualizerRunning = false;
+let visualizerFrame = null;
+
+function resizeVisualizer() {
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(48 * ratio);
+
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
+resizeVisualizer();
+window.addEventListener("resize", resizeVisualizer);
+
+function drawVisualizer() {
+    if (!visualizerRunning || !analyser) return;
+
+    const width = canvas.clientWidth;
+    const height = 48;
+
+    analyser.getByteFrequencyData(visualizerData);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const bars = 42;
+    const gap = 3;
+    const barWidth = Math.max(2, (width - gap * (bars - 1)) / bars);
+
+    for (let i = 0; i < bars; i++) {
+
+        const index = Math.floor(
+            i * visualizerData.length / bars
+        );
+
+        const amplitude = visualizerData[index] / 255;
+
+        const barHeight = Math.max(
+            3,
+            amplitude * 38
+        );
+
+        const x = i * (barWidth + gap);
+        const y = (height - barHeight) / 2;
+
+        ctx.fillStyle = "#62e6c5";
+
+        ctx.beginPath();
+
+        ctx.roundRect(
+            x,
+            y,
+            barWidth,
+            barHeight,
+            3
+        );
+
+        ctx.fill();
+    }
+
+    visualizerFrame = requestAnimationFrame(drawVisualizer);
+}
+
+/* Part 3 থেকে microphone stream যুক্ত হবে */
+
+window.DV_VIS = {
+
+    attachStream: async function (stream) {
+
+        try {
+
+            if (!window.dvAudioContext) {
+                window.dvAudioContext =
+                    new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const audioContext = window.dvAudioContext;
+
+            await audioContext.resume();
+
+            analyser = audioContext.createAnalyser();
+
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.78;
+
+            const source = audioContext.createMediaStreamSource(stream);
+
+            source.connect(analyser);
+
+            visualizerData = new Uint8Array(
+                analyser.frequencyBinCount
+            );
+
+            visualizerRunning = true;
+
+            if (visualizerFrame) {
+                cancelAnimationFrame(visualizerFrame);
+            }
+
+            resizeVisualizer();
+            drawVisualizer();
+
+        } catch (error) {
+            console.error("Visualizer Error:", error);
+        }
+    },
+
+    stop: function () {
+
+        visualizerRunning = false;
+
+        if (visualizerFrame) {
+            cancelAnimationFrame(visualizerFrame);
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+};
+
+
+/* ---------- EQUALIZER UI ---------- */
+
+const voiceCard = document.getElementById("deepener").closest(".card");
+
+const eqCard = document.createElement("div");
+
+eqCard.className = "card";
+eqCard.id = "equalizerCard";
+
+eqCard.innerHTML = `
+    <h3>🎚 3-Band Equalizer</h3>
+
+    <p class="note">
+        Low, Mid ও High Frequency আলাদাভাবে নিয়ন্ত্রণ করুন।
+    </p>
+
+    <div class="row">
+        <label>Low / Bass</label>
+        <input type="range" id="eqLow"
+               min="-12" max="12" value="0">
+        <span class="value" id="eqLowValue">0 dB</span>
+    </div>
+
+    <div class="row">
+        <label>Mid / Voice</label>
+        <input type="range" id="eqMid"
+               min="-12" max="12" value="0">
+        <span class="value" id="eqMidValue">0 dB</span>
+    </div>
+
+    <div class="row">
+        <label>High / Treble</label>
+        <input type="range" id="eqHigh"
+               min="-12" max="12" value="0">
+        <span class="value" id="eqHighValue">0 dB</span>
+    </div>
+
+    <div class="preset">
+        <button type="button" id="eqFlat">Flat</button>
+        <button type="button" id="eqWarm">Warm</button>
+        <button type="button" id="eqClear">Clear</button>
+    </div>
+`;
+
+voiceCard.after(eqCard);
+
+
+/* ---------- EQUALIZER AUDIO ENGINE ---------- */
+
+const eq = {
+    low: 0,
+    mid: 0,
+    high: 0,
+    filters: null
+};
+
+function updateEqualizer() {
+
+    eq.low = Number(document.getElementById("eqLow").value);
+    eq.mid = Number(document.getElementById("eqMid").value);
+    eq.high = Number(document.getElementById("eqHigh").value);
+
+    document.getElementById("eqLowValue").textContent =
+        eq.low + " dB";
+
+    document.getElementById("eqMidValue").textContent =
+        eq.mid + " dB";
+
+    document.getElementById("eqHighValue").textContent =
+        eq.high + " dB";
+
+    if (eq.filters) {
+
+        eq.filters.low.gain.setTargetAtTime(
+            eq.low,
+            window.dvAudioContext.currentTime,
+            0.015
+        );
+
+        eq.filters.mid.gain.setTargetAtTime(
+            eq.mid,
+            window.dvAudioContext.currentTime,
+            0.015
+        );
+
+        eq.filters.high.gain.setTargetAtTime(
+            eq.high,
+            window.dvAudioContext.currentTime,
+            0.015
+        );
+    }
+}
+
+
+/* ---------- EQ SLIDERS ---------- */
+
+["eqLow", "eqMid", "eqHigh"].forEach(id => {
+
+    document.getElementById(id).addEventListener(
+        "input",
+        updateEqualizer
+    );
+
+});
+
+
+/* ---------- EQ PRESETS ---------- */
+
+function setEQ(low, mid, high) {
+
+    document.getElementById("eqLow").value = low;
+    document.getElementById("eqMid").value = mid;
+    document.getElementById("eqHigh").value = high;
+
+    updateEqualizer();
+}
+
+document.getElementById("eqFlat").onclick = () => {
+    setEQ(0, 0, 0);
+};
+
+document.getElementById("eqWarm").onclick = () => {
+    setEQ(5, 1, -3);
+};
+
+document.getElementById("eqClear").onclick = () => {
+    setEQ(-2, 3, 5);
+};
+
+
+/* ---------- CONNECT EQ WITH AUDIO ---------- */
+
+window.DV_EQ = {
+
+    connect: function (source) {
+
+        if (!window.dvAudioContext) {
+            throw new Error("AudioContext not initialized");
+        }
+
+        const audioContext = window.dvAudioContext;
+
+        const low = audioContext.createBiquadFilter();
+        low.type = "lowshelf";
+        low.frequency.value = 250;
+
+        const mid = audioContext.createBiquadFilter();
+        mid.type = "peaking";
+        mid.frequency.value = 1200;
+        mid.Q.value = 0.8;
+
+        const high = audioContext.createBiquadFilter();
+        high.type = "highshelf";
+        high.frequency.value = 4000;
+
+        low.connect(mid);
+        mid.connect(high);
+
+        source.connect(low);
+
+        eq.filters = {
+            low: low,
+            mid: mid,
+            high: high
+        };
+
+        updateEqualizer();
+
+        return high;
+    },
+
+    getSettings: function () {
+        return {
+            low: eq.low,
+            mid: eq.mid,
+            high: eq.high
+        };
+    },
+
+    reset: function () {
+        setEQ(0, 0, 0);
+    }
+};
+
+console.log("DeepVoice Studio Part 2 Loaded");
+
+})();
+</script>
+
+
