@@ -1755,3 +1755,249 @@ console.log("DeepVoice Studio Part 3 Completed");
 })();
 </script>
 
+
+<script>
+/* =====================================
+   DEEPVOICE STUDIO - PART 4A
+   ADVANCED NOISE PROFILE ENGINE
+===================================== */
+
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+/* ---------- NOISE PROFILE UI ---------- */
+
+const noiseCard = $("noiseEnabled").closest(".card");
+
+const profileBox = document.createElement("div");
+
+profileBox.id = "noiseProfileBox";
+
+profileBox.innerHTML = `
+    <div class="section-label">
+        🎧 Advanced Noise Profile
+    </div>
+
+    <p class="note">
+        রেকর্ডিংয়ের আগে ২-৩ সেকেন্ড শুধু
+        ফ্যান বা ব্যাকগ্রাউন্ড শব্দ রেকর্ড করুন।
+        এই নমুনা ব্যবহার করে Noise Reduction
+        উন্নত করা যাবে।
+    </p>
+
+    <button type="button"
+        class="purple full"
+        id="captureNoiseBtn">
+        🎙 Capture Background Noise
+    </button>
+
+    <div class="status"
+        id="noiseProfileStatus">
+        কোনো Noise Profile তৈরি হয়নি।
+    </div>
+
+    <div class="row">
+        <label>Advanced Reduction</label>
+        <input type="range"
+            id="advancedReduction"
+            min="0" max="100" value="45">
+        <span class="value"
+            id="advancedReductionValue">45%</span>
+    </div>
+`;
+
+noiseCard.appendChild(profileBox);
+
+
+/* ---------- NOISE PROFILE ENGINE ---------- */
+
+let noiseProfile = null;
+let capturing = false;
+
+window.DV_NOISE = {
+
+    profile: null,
+
+    capture: async function () {
+
+        if (capturing) return;
+
+        let noiseStream = null;
+        let context = null;
+
+        try {
+
+            capturing = true;
+
+            $("captureNoiseBtn").disabled = true;
+
+            $("noiseProfileStatus").textContent =
+                "Background Noise সংগ্রহ হচ্ছে...";
+
+            noiseStream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+
+            context = new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+            await context.resume();
+
+            const source =
+                context.createMediaStreamSource(noiseStream);
+
+            const analyser = context.createAnalyser();
+
+            analyser.fftSize = 2048;
+
+            analyser.smoothingTimeConstant = 0;
+
+            source.connect(analyser);
+
+            const data = new Float32Array(
+                analyser.frequencyBinCount
+            );
+
+            const average = new Float32Array(
+                analyser.frequencyBinCount
+            );
+
+            const samples = 60;
+
+            let count = 0;
+
+            const interval = setInterval(() => {
+
+                analyser.getFloatFrequencyData(data);
+
+                for (let i = 0; i < data.length; i++) {
+
+                    const value = data[i];
+
+                    average[i] +=
+                        Number.isFinite(value)
+                        ? Math.pow(10, value / 20)
+                        : 0;
+                }
+
+                count++;
+
+                $("noiseProfileStatus").textContent =
+                    "Noise Profile সংগ্রহ হচ্ছে: " +
+                    Math.round(count / samples * 100) + "%";
+
+                if (count >= samples) {
+
+                    clearInterval(interval);
+
+                    for (let i = 0; i < average.length; i++) {
+                        average[i] /= samples;
+                    }
+
+                    noiseProfile = average;
+
+                    window.DV_NOISE.profile = average;
+
+                    $("noiseProfileStatus").textContent =
+                        "✓ Noise Profile তৈরি হয়েছে";
+
+                    $("captureNoiseBtn").textContent =
+                        "✓ Profile Captured";
+
+                    $("captureNoiseBtn").disabled = false;
+
+                    capturing = false;
+
+                    noiseStream.getTracks().forEach(
+                        track => track.stop()
+                    );
+
+                    context.close();
+                }
+
+            }, 50);
+
+        } catch (error) {
+
+            console.error(error);
+
+            $("noiseProfileStatus").textContent =
+                "Noise Capture Error: " + error.message;
+
+            $("captureNoiseBtn").disabled = false;
+
+            capturing = false;
+
+            if (noiseStream) {
+                noiseStream.getTracks().forEach(
+                    track => track.stop()
+                );
+            }
+
+            if (context) context.close();
+        }
+    },
+
+    getProfile: function () {
+        return noiseProfile;
+    },
+
+    hasProfile: function () {
+        return noiseProfile !== null;
+    },
+
+    reset: function () {
+
+        noiseProfile = null;
+
+        window.DV_NOISE.profile = null;
+
+        $("noiseProfileStatus").textContent =
+            "Noise Profile মুছে ফেলা হয়েছে।";
+
+        $("captureNoiseBtn").textContent =
+            "🎙 Capture Background Noise";
+    }
+
+};
+
+
+/* ---------- CAPTURE BUTTON ---------- */
+
+$("captureNoiseBtn").addEventListener(
+    "click",
+    () => window.DV_NOISE.capture()
+);
+
+
+/* ---------- REDUCTION SLIDER ---------- */
+
+$("advancedReduction").addEventListener(
+    "input",
+    function () {
+
+        $("advancedReductionValue").textContent =
+            this.value + "%";
+
+    }
+);
+
+
+/* ---------- INITIALIZATION ---------- */
+
+console.log("DeepVoice Studio Part 4A Loaded");
+
+})();
+</script>
+
+</body>
+</html>
