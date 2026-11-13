@@ -1097,11 +1097,11 @@ async function applyEffects() {
         const audioBuffer =
             await decodeContext.decodeAudioData(arrayBuffer);
 
-        const tempo = Number($("tempo").value) / 100;
+        const tempo = 1;
 
-        const sampleRate = audioBuffer.sampleRate;
+const sampleRate = audioBuffer.sampleRate;
 
-        const duration = audioBuffer.duration / tempo;
+const duration = audioBuffer.duration;
 
         const offline = new OfflineAudioContext(
             audioBuffer.numberOfChannels,
